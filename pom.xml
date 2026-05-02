@@ -21,6 +21,9 @@
 
     <properties>
         <java.version>17</java.version>
+        <!-- Bumped to versions that recognise Java 25+ class file format. -->
+        <byte-buddy.version>1.15.11</byte-buddy.version>
+        <mockito.version>5.14.2</mockito.version>
     </properties>
 
     <dependencies>
@@ -82,6 +85,16 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Required when running on Java 25 — Mockito's bytecode
+                         transformer needs the experimental flag for class
+                         versions newer than it natively supports. -->
+                    <argLine>-Dnet.bytebuddy.experimental=true</argLine>
+                </configuration>
             </plugin>
         </plugins>
     </build>

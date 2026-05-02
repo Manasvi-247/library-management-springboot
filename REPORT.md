@@ -2,14 +2,7 @@
 
 **Course:** Spring Boot Web Application Development
 **Institution:** BITS Pilani
-**Author:** _Your Name_ &nbsp;·&nbsp; _Your ID_
-**Submission date:** _DD MMM YYYY_
-**GitHub URL:** _https://github.com/&lt;your-username&gt;/inkwell-library_
-
-> This document is written in Markdown so it can be exported to PDF in one step
-> (e.g. VS Code → *Markdown PDF*, or `pandoc REPORT.md -o REPORT.pdf`). Replace
-> the `_…_` placeholders, drop screenshots into a `screenshots/` folder, and
-> export.
+**GitHub:** [@Manasvi-247](https://github.com/Manasvi-247) &nbsp;·&nbsp; [library-management-springboot](https://github.com/Manasvi-247/library-management-springboot)
 
 ---
 
@@ -101,7 +94,8 @@ public class DataSeeder implements CommandLineRunner {
 }
 ```
 
-> **Screenshot placeholder:** `screenshots/01-h2-tables-populated.png`
+![H2 console showing 10 authors and 10 books seeded on startup](screenshots/01-h2-tables-populated.png)
+*Figure 1 — H2 console: both `AUTHORS` and `BOOKS` tables populated with the 10 + 10 sample rows from `DataSeeder`.*
 
 ### 4.2 Create operation
 
@@ -123,10 +117,14 @@ public String create(@Valid @ModelAttribute("author") Author author,
 }
 ```
 
-> **Screenshot placeholders:**
-> `screenshots/02-create-author-form.png`,
-> `screenshots/03-create-validation-errors.png`,
-> `screenshots/04-create-duplicate-error.png`
+![New Author form — empty state](screenshots/02-create-author-form.png)
+*Figure 2 — `GET /authors/new`: empty form rendered by `authors/form.jsp`.*
+
+![Form rejected with field-level validation errors](screenshots/03-create-validation-errors.png)
+*Figure 3 — Bean Validation errors surfaced via `BindingResult` and Spring's `<form:errors>` tag — the form re-renders with red error messages under each field.*
+
+![Friendly 409 page on duplicate email](screenshots/04-create-duplicate-error.png)
+*Figure 4 — Duplicate email triggers `DataIntegrityViolationException`, caught by `GlobalExceptionHandler` and rendered as a styled 409 page with the underlying constraint name.*
 
 ### 4.3 Read operation
 
@@ -145,11 +143,17 @@ The view layer never touches lazy associations because the query returns a flat
 `AuthorBookView` DTO. A second variant (`findByGenreJoined`) supports filtering
 by genre — wired up to a small filter bar in the joined view.
 
-> **Screenshot placeholders:**
-> `screenshots/05-authors-list.png`,
-> `screenshots/06-books-list.png`,
-> `screenshots/07-catalog-join.png`,
-> `screenshots/08-catalog-join-filtered.png`
+![Authors list view](screenshots/05-authors-list.png)
+*Figure 5 — `GET /authors`: all 10 authors rendered with country pills, book-count badges, and edit actions.*
+
+![Books list view](screenshots/06-books-list.png)
+*Figure 6 — `GET /books`: all 10 books with genre pills (Fiction / Literary / Magical Realism / Fantasy / Dystopian / Non-Fiction) and prices.*
+
+![Inner-join projection page](screenshots/07-catalog-join.png)
+*Figure 7 — `GET /books/joined`: result of the JPQL `INNER JOIN`, projected into `AuthorBookView`. The exact query is shown above the table for transparency.*
+
+![Inner-join filtered by genre](screenshots/08-catalog-join-filtered.png)
+*Figure 8 — `GET /books/joined?genre=Fantasy`: same query with an added `WHERE LOWER(b.genre) = LOWER(?)` clause — returns just the two Fantasy titles.*
 
 ### 4.4 Update operation
 
@@ -159,7 +163,11 @@ by genre — wired up to a small filter bar in the joined view.
 - The service fetches the existing entity, copies in the new field values, and
   re-saves — keeping the JPA-managed identity stable.
 
-> **Screenshot placeholder:** `screenshots/09-edit-form.png`
+![Edit author form pre-filled](screenshots/09-edit-form.png)
+*Figure 9 — `GET /authors/1/edit`: form pre-populated with the existing record (Chetan Bhagat / India / 1974).*
+
+![Update success — flash banner and updated country](screenshots/09b-edit-success.png)
+*Figure 9b — After submission, the redirect renders `flashSuccess` ("Author 'Chetan Bhagat' updated successfully") and the country pill now reads **Canada** — proving the update persisted through the service → repository → DB chain.*
 
 ### 4.5 Exception handling
 
@@ -186,7 +194,8 @@ The UI is built on a small custom design system using only CSS (no framework):
 - Responsive table that collapses into stacked rows on mobile.
 - Flash messages, validation errors, and a friendly error page.
 
-> **Screenshot placeholder:** `screenshots/10-dashboard-hero.png`
+![Dashboard hero with stat cards](screenshots/10-dashboard-hero.png)
+*Figure 10 — `GET /`: dashboard hero with three live stat cards (Authors / Books / Joined Rows) plus a feature-checklist card.*
 
 ---
 
@@ -204,16 +213,33 @@ Run with:
 mvn test
 ```
 
+![Maven test output — 14 tests, 0 failures, BUILD SUCCESS](screenshots/11-tests.png)
+*Figure 11 — `mvn test`: all 14 unit tests pass across `BookRepositoryTest` (5), `BookServiceTest` (3), `AuthorServiceTest` (5), and `LibraryApplicationTests` (1). BUILD SUCCESS.*
+
 ---
 
 ## 7. Running the App
 
-See [README.md](README.md) for full setup. Quick start (H2 — zero setup):
+See [README.md](README.md) for full setup.
 
+**Clone & run (H2 — zero setup):**
 ```bash
+git clone https://github.com/Manasvi-247/library-management-springboot.git
+cd library-management-springboot
 mvn spring-boot:run -Dspring-boot.run.profiles=h2
 ```
 Then visit <http://localhost:8080/>.
+
+**MySQL profile (default):**
+```bash
+mvn spring-boot:run
+```
+The schema `library_db` is auto-created via `createDatabaseIfNotExist=true`. Defaults to `root`/`root` — override in `src/main/resources/application-mysql.properties`.
+
+**Run tests:**
+```bash
+mvn test
+```
 
 ---
 
@@ -225,8 +251,7 @@ Then visit <http://localhost:8080/>.
 | **`LazyInitializationException`** when rendering `${author.books}` in JSP | Two paths: keep `spring.jpa.open-in-view=true`, or project the joined data into a flat DTO. We use the DTO for the join page. |
 | **Surfacing integrity violations as friendly UI errors**                  | `@ControllerAdvice` converts `DataIntegrityViolationException` into a styled 409 page instead of a stack trace.       |
 | **Form-binding for the `Book → Author` foreign key**                      | Bound `authorId` as a separate request parameter; the service fetches the `Author` and assigns the relationship before save. |
-| **Reproducible local demo without MySQL**                                 | Added an `h2` profile and an `application-h2.properties` so graders without MySQL can still run the app.              |
-| **Tests had to run against the same schema as MySQL**                     | Test profile uses H2 in `MODE=MySQL` so unique-constraint behaviour matches production.                               |
+| **Mockito failed on Java 25** (`Byte Buddy could not instrument…`, `Java 25 (69) is not supported`) | Bumped `byte-buddy` to 1.15.11 and `mockito` to 5.14.2 in `pom.xml`, plus added `-Dnet.bytebuddy.experimental=true` to the surefire `argLine` so the JVM-25 class-file format is accepted during mock generation. |
 
 ---
 
@@ -244,21 +269,22 @@ Then visit <http://localhost:8080/>.
 
 ---
 
-## 10. Screenshots Index
+## 10. Figures Index
 
-Place these files into a `screenshots/` folder before exporting to PDF:
-
-1. `01-h2-tables-populated.png` — H2 console showing 10 authors + 10 books.
-2. `02-create-author-form.png` — New-author form (empty).
-3. `03-create-validation-errors.png` — Form rejected with field errors.
-4. `04-create-duplicate-error.png` — Friendly 409 page on duplicate email.
-5. `05-authors-list.png` — Authors list view.
-6. `06-books-list.png` — Books list view.
-7. `07-catalog-join.png` — Inner-join projection page.
-8. `08-catalog-join-filtered.png` — Same page filtered by genre.
-9. `09-edit-form.png` — Update flow on an existing record.
-9b. `09b-edit-success.png` — Update success: flash banner + country changed to Canada (proves the update persisted).
-10. `10-dashboard-hero.png` — Home/dashboard.
+| Figure | Topic                                                      | Section |
+|--------|------------------------------------------------------------|---------|
+| 1      | H2 console — 10 authors + 10 books seeded                  | 4.1     |
+| 2      | New Author form                                            | 4.2     |
+| 3      | Validation errors on form submit                           | 4.2     |
+| 4      | 409 page on duplicate email                                | 4.2     |
+| 5      | Authors list                                               | 4.3     |
+| 6      | Books list                                                 | 4.3     |
+| 7      | Inner-join projection page                                 | 4.3     |
+| 8      | Inner-join filtered by genre                               | 4.3     |
+| 9      | Edit Author form pre-filled                                | 4.4     |
+| 9b     | Update success — flash + country changed                   | 4.4     |
+| 10     | Dashboard hero with stat cards                             | 5       |
+| 11     | `mvn test` output — 14/14 tests pass, BUILD SUCCESS        | 6       |
 
 ---
 

@@ -105,16 +105,13 @@ src/test/java/com/bits/library/
 
 ---
 
-## Pushing to GitHub
+## Clone & run
 
 ```bash
-cd /path/to/bits
-git init
-git add .
-git commit -m "Inkwell: Spring Boot Author/Book CRUD with JSP"
-git branch -M main
-git remote add origin https://github.com/<your-username>/inkwell-library.git
-git push -u origin main
+git clone https://github.com/Manasvi-247/library-management-springboot.git
+cd library-management-springboot
+mvn spring-boot:run -Dspring-boot.run.profiles=h2
 ```
 
-Then paste the GitHub URL into [`REPORT.md`](REPORT.md) under *Submission*.
+Then open <http://localhost:8080/>.
+
